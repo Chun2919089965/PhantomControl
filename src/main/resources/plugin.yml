@@ -1,0 +1,20 @@
+name: PhantomControl
+version: '${version}'
+main: yyz.chl.phantomcontrol.PhantomControl
+api-version: 1.18
+folia-supported: true
+author: CHL_chun
+softdepend: [PlaceholderAPI]
+libraries:
+  - "com.zaxxer:HikariCP:5.1.0"
+  - "com.mysql:mysql-connector-j:8.0.33"
+permissions:
+  phantomcontrol.reload:
+    description: 幻翼控制重载命令权限
+    default: op
+  phantomcontrol.use:
+    description: 允许玩家控制幻翼生成（无此权限的玩家将自动启用幻翼）
+    default: true
+  phantomcontrol.admin:
+    description: 幻翼控制管理员权限，可以管理其他玩家的幻翼设置
+    default: op

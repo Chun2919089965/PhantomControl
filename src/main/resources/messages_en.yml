@@ -1,0 +1,81 @@
+# PhantomControl Message Configuration File
+# Config Version - Do not modify this value manually
+config-version: 1.0
+
+# Main command messages
+command:
+  status: "&aPhantomControl current status: %status%"
+  status_enabled: "&aEnabled &8| &aPhantoms will spawn"
+  status_disabled: "&cDisabled &8| &cPhantoms will not spawn"
+  not-player: "&cThis command can only be executed by players!"
+  enabled: "&a✅ PhantomControl has been enabled, phantoms will spawn normally."
+  disabled: "&c❌ PhantomControl has been disabled, phantoms will not spawn."
+  usage: "&6Usage: /phantomcontrol &a[check|status|enable|disable|on|off]"
+  no-permission: "&cYou do not have permission to execute this command"
+  cannot-disable: "&cYou do not have permission to disable phantom control, phantoms will remain enabled"
+
+# Reload command messages
+reload-command:
+  success: "&a✅ PhantomControl configuration has been successfully reloaded!"
+  error: "&c❌ An error occurred while reloading configuration: %error%"
+  no-permission: "&cYou do not have permission to use this command!"
+
+# Admin command messages
+admin:
+  usage: "&cUsage: /%maincommand% admin <enable|disable|status|batch|server> <arguments>"
+  player-not-found: "&cPlayer %player% not found!"
+  enable-success: "&a✅ Successfully enabled phantoms for player %player%, phantoms will spawn normally!"
+  disable-success: "&a✅ Successfully disabled phantoms for player %player%, phantoms will not spawn!"
+  status: "&aPlayer %player%'s phantom status: %status%"
+  status-enabled: "&aEnabled &8| &aPhantoms will spawn"
+  status-disabled: "&cDisabled &8| &cPhantoms will not spawn"
+  invalid-subcommand: "&cInvalid admin subcommand! Use /%maincommand% admin <enable|disable|status|batch|server> <arguments>"
+  
+  # Batch management command messages
+  batch-usage: "&cUsage: /%maincommand% admin batch <enable|disable> <player1> <player2> ..."
+  batch-invalid-subcommand: "&cInvalid batch operation! Use /%maincommand% admin batch <enable|disable> <player1> <player2> ..."
+  batch-success: "&a✅ Batch %action% phantoms operation completed! Success: %success%, Failed: %fail%"
+  
+  # Server status command messages
+  server-status-header: "&a📊 Server Phantom Status Statistics 📊"
+  server-status-total: "&aTotal online players: %count%"
+  server-status-enabled: "&a✅ Enabled phantoms (will spawn): %count% players (%percentage%%%)"
+  server-status-disabled: "&c❌ Disabled phantoms (will not spawn): %count% players (%percentage%%%)"
+
+# Help messages
+help:
+  header: "&a📋 PhantomControl Help 📋"
+  enable: "&a/%maincommand% enable | on &7- Enable phantoms &8| &aPhantoms will spawn"
+  disable: "&a/%maincommand% disable | off &7- Disable phantoms &8| &cPhantoms will not spawn"
+  toggle: "&a/%maincommand% toggle | switch &7- Toggle phantom status"
+  status: "&a/%maincommand% status | check &7- Check current status"
+  gui: "&a/%maincommand% gui | menu &7- Open graphical control interface"
+  admin: "&a/%maincommand% admin <enable|disable|status> <playername> &7- Manage other players' phantom settings"
+  batch: "&a/%maincommand% admin batch <enable|disable> <player1> <player2> ... &7- Batch manage multiple players' phantom settings"
+  server: "&a/%maincommand% admin server &7- View server phantom settings statistics"
+  help: "&a/%maincommand% help &7- Display this help message"
+  reload: "&a/%reloadcommand% &7- Reload plugin configuration"
+
+# Database messages
+database:
+  fail-load: "&c❌ Failed to load data: %error%"
+  fail-save: "&c❌ Failed to save data: %error%"
+
+# GUI messages
+gui:
+  title: "Phantom Control"
+  status-enabled: "&a✅ Current status: Enabled"
+  status-enabled-lore1: "&7Phantoms will spawn normally"
+  status-enabled-lore2: "&7Click to disable phantom spawning"
+  status-disabled: "&c❌ Current status: Disabled"
+  status-disabled-lore1: "&7Phantoms will not spawn"
+  status-disabled-lore2: "&7Click to enable phantom spawning"
+  enable-button: "&a✅ Enable Phantoms"
+  enable-button-lore: "&7Allow phantoms to spawn"
+  disable-button: "&c❌ Disable Phantoms"
+  disable-button-lore: "&7Prevent phantoms from spawning"
+  info-button: "&eℹ️ About Phantoms"
+  info-button-lore1: "&7Phantoms spawn when players"
+  info-button-lore2: "&7haven't slept for a long time"
+  info-button-lore3: "&7Use this interface to control"
+  info-button-lore4: "&7whether phantoms are allowed to spawn"

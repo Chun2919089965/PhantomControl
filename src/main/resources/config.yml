@@ -1,0 +1,90 @@
+# PhantomControl 配置文件
+# 配置版本 - 请勿手动修改此值
+config-version: 1.0
+
+# 插件设置
+settings:
+  # 任务调度器设置
+  task:
+    initial-delay-ticks: 1
+    period-ticks: 120
+  
+  # 调试模式设置
+  debug:
+    # 是否启用调试模式（启用后会显示详细日志）
+    enabled: false
+  
+  # 命令设置
+  commands:
+    # 主命令名称
+    main-command: "phantomcontrol"
+    # 主命令别名
+    main-aliases: ["pc", "phantom"]
+    # 重载命令名称
+    reload-command: "phantomcontrolreload"
+    # 重载命令别名
+    reload-aliases: ["pcr", "phreload"]
+  
+  # GUI设置
+  gui:
+    # 状态方块材质
+    status-enabled-material: "GREEN_WOOL"
+    status-disabled-material: "RED_WOOL"
+    # 按钮材质
+    enable-button-material: "LIME_DYE"
+    disable-button-material: "RED_DYE"
+    info-button-material: "BOOK"
+    border-material: "GRAY_STAINED_GLASS_PANE"
+  
+  # 消息设置
+  message:
+    # 默认消息显示方式：CHAT, ACTION_BAR, TITLE
+    default-type: "CHAT"
+    # 是否在状态变更时显示标题消息
+    show-title-on-change: false
+    # 是否在状态变更时显示ActionBar消息
+    show-actionbar-on-change: false
+    # 语言设置
+    language:
+      # 语言模式: auto, chinese, english
+      # auto: 自动根据玩家客户端语言选择（默认为英文，如果玩家是简体中文就用中文）
+      # chinese: 强制使用中文
+      # english: 强制使用英文
+      mode: "auto"
+      # 默认语言文件名称（不含.yml扩展名）
+      default: "messages_en"
+  
+  # bStats统计设置
+  bstats:
+    # 是否启用bStats统计功能
+    enabled: true
+
+# 数据库设置
+database:
+  # 数据库类型 (flatfile 或 mysql)
+  type: "flatfile"
+  
+  # 自动保存间隔（秒），0表示不启用自动保存
+  auto-save-interval: 300
+  
+  # MySQL 数据库配置
+  mysql:
+    address: "localhost:3306"
+    username: "username"
+    password: "password"
+    database: "phantom_control"
+    prefix: "phc_"
+  
+  # 缓存过期时间（分钟），超过此时间的缓存条目会在清理时保存并移除
+  cache-timeout-minutes: 60
+
+# 白名单和黑名单设置
+whitelist:
+  # 是否启用世界白名单功能
+  world-whitelist-enabled: false
+  # 世界白名单 - 只有在这些世界中的玩家才会被处理
+  world-whitelist: []
+  # 是否启用世界黑名单功能
+  world-blacklist-enabled: true
+  # 世界黑名单 - 黑名单世界中的玩家不会被处理
+  world-blacklist: []

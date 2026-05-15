@@ -1,0 +1,81 @@
+# PhantomControl 消息配置文件
+# 配置版本 - 请勿手动修改此值
+config-version: 1.0
+
+# 主命令消息
+command:
+  status: "&a幻翼控制当前状态：%status%"
+  status_enabled: "&a已启用 &8| &a幻翼会生成"
+  status_disabled: "&c已禁用 &8| &c幻翼不会生成"
+  not-player: "&c此命令只能由玩家执行！"
+  enabled: "&a✅ 幻翼控制已启用，幻翼会正常生成。"
+  disabled: "&c❌ 幻翼控制已禁用，幻翼不会生成。"
+  usage: "&6使用方法: /phantomcontrol &a[check|status|enable|disable|on|off]"
+  no-permission: "&c你没有执行此命令的权限"
+  cannot-disable: "&c你没有权限禁用幻翼控制，幻翼将保持启用状态"
+
+# 重载命令消息
+reload-command:
+  success: "&a✅ PhantomControl 配置已成功重载！"
+  error: "&c❌ 重载配置时发生错误: %error%"
+  no-permission: "&c你没有权限使用此命令！"
+
+# 管理员命令消息
+admin:
+  usage: "&c使用方法: /%maincommand% admin <enable|disable|status|batch|server> <参数>"
+  player-not-found: "&c找不到玩家 %player%！"
+  enable-success: "&a✅ 已成功为玩家 %player% 启用幻翼，幻翼会正常生成！"
+  disable-success: "&a✅ 已成功为玩家 %player% 禁用幻翼，幻翼不会生成！"
+  status: "&a玩家 %player% 的幻翼状态：%status%"
+  status-enabled: "&a已启用 &8| &a幻翼会生成"
+  status-disabled: "&c已禁用 &8| &c幻翼不会生成"
+  invalid-subcommand: "&c无效的管理员子命令！使用 /%maincommand% admin <enable|disable|status|batch|server> <参数>"
+  
+  # 批量管理命令消息
+  batch-usage: "&c使用方法: /%maincommand% admin batch <enable|disable> <玩家1> <玩家2> ..."
+  batch-invalid-subcommand: "&c无效的批量操作！使用 /%maincommand% admin batch <enable|disable> <玩家1> <玩家2> ..."
+  batch-success: "&a✅ 批量%action%幻翼操作完成！成功: %success% 个, 失败: %fail% 个"
+  
+  # 服务器状态命令消息
+  server-status-header: "&a📊 服务器幻翼状态统计 📊"
+  server-status-total: "&a总在线人数: %count%"
+  server-status-enabled: "&a✅ 启用幻翼 (会生成): %count% 人 (%percentage%%%)"
+  server-status-disabled: "&c❌ 禁用幻翼 (不会生成): %count% 人 (%percentage%%%)"
+
+# 帮助消息
+help:
+  header: "&a📋 PhantomControl 帮助 📋"
+  enable: "&a/%maincommand% enable | on &7- 启用幻翼 &8| &a幻翼会生成"
+  disable: "&a/%maincommand% disable | off &7- 禁用幻翼 &8| &c幻翼不会生成"
+  toggle: "&a/%maincommand% toggle | switch | 切换 &7- 切换幻翼状态"
+  status: "&a/%maincommand% status | check &7- 查看当前状态"
+  gui: "&a/%maincommand% gui | menu | 界面 &7- 打开图形化控制界面"
+  admin: "&a/%maincommand% admin <enable|disable|status> <玩家名> &7- 管理其他玩家的幻翼设置"
+  batch: "&a/%maincommand% admin batch <enable|disable> <玩家1> <玩家2> ... &7- 批量管理多个玩家的幻翼设置"
+  server: "&a/%maincommand% admin server &7- 查看服务器幻翼设置统计信息"
+  help: "&a/%maincommand% help &7- 显示此帮助信息"
+  reload: "&a/%reloadcommand% &7- 重载插件配置"
+
+# 数据库消息
+database:
+  fail-load: "&c❌ 加载数据失败: %error%"
+  fail-save: "&c❌ 保存数据失败: %error%"
+
+# GUI消息
+gui:
+  title: "幻翼控制"
+  status-enabled: "&a✅ 当前状态: 已启用"
+  status-enabled-lore1: "&7幻翼会正常生成"
+  status-enabled-lore2: "&7点击禁用幻翼生成"
+  status-disabled: "&c❌ 当前状态: 已禁用"
+  status-disabled-lore1: "&7幻翼不会生成"
+  status-disabled-lore2: "&7点击启用幻翼生成"
+  enable-button: "&a✅ 启用幻翼"
+  enable-button-lore: "&7允许幻翼生成"
+  disable-button: "&c❌ 禁用幻翼"
+  disable-button-lore: "&7阻止幻翼生成"
+  info-button: "&eℹ️ 关于幻翼"
+  info-button-lore1: "&7幻翼会在玩家长时间"
+  info-button-lore2: "&7未睡觉时生成"
+  info-button-lore3: "&7使用此界面可以控制"
+  info-button-lore4: "&7是否允许幻翼生成"
