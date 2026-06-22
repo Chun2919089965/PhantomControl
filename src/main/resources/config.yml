@@ -1,19 +1,21 @@
 # PhantomControl 配置文件
-# 配置版本 - 请勿手动修改此值
-config-version: 1.0
+# 配置文件版本（请勿手动修改，升级插件时会自动更新）
+config-version: 1
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 插件设置
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 settings:
   # 任务调度器设置
   task:
     initial-delay-ticks: 1
     period-ticks: 120
-  
+
   # 调试模式设置
   debug:
     # 是否启用调试模式（启用后会显示详细日志）
     enabled: false
-  
+
   # 命令设置
   commands:
     # 主命令名称
@@ -24,7 +26,7 @@ settings:
     reload-command: "phantomcontrolreload"
     # 重载命令别名
     reload-aliases: ["pcr", "phreload"]
-  
+
   # GUI设置
   gui:
     # 状态方块材质
@@ -35,7 +37,7 @@ settings:
     disable-button-material: "RED_DYE"
     info-button-material: "BOOK"
     border-material: "GRAY_STAINED_GLASS_PANE"
-  
+
   # 消息设置
   message:
     # 默认消息显示方式：CHAT, ACTION_BAR, TITLE
@@ -53,20 +55,22 @@ settings:
       mode: "auto"
       # 默认语言文件名称（不含.yml扩展名）
       default: "messages_en"
-  
+
   # bStats统计设置
   bstats:
     # 是否启用bStats统计功能
     enabled: true
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 数据库设置
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 database:
   # 数据库类型 (flatfile 或 mysql)
   type: "flatfile"
-  
+
   # 自动保存间隔（秒），0表示不启用自动保存
   auto-save-interval: 300
-  
+
   # MySQL 数据库配置
   mysql:
     address: "localhost:3306"
@@ -74,11 +78,13 @@ database:
     password: "password"
     database: "phantom_control"
     prefix: "phc_"
-  
+
   # 缓存过期时间（分钟），超过此时间的缓存条目会在清理时保存并移除
   cache-timeout-minutes: 60
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 白名单和黑名单设置
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 whitelist:
   # 是否启用世界白名单功能
   world-whitelist-enabled: false
