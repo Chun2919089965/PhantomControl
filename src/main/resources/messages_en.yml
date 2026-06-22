@@ -29,6 +29,7 @@ admin:
   status: "&aPlayer %player%'s phantom status: %status%"
   status-enabled: "&aEnabled &8| &aPhantoms will spawn"
   status-disabled: "&cDisabled &8| &cPhantoms will not spawn"
+  status-offline: "&7(Offline)"
   invalid-subcommand: "&cInvalid admin subcommand! Use /%maincommand% admin <enable|disable|status|batch|server> <arguments>"
   
   # Batch management command messages
