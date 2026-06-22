@@ -1,6 +1,6 @@
 # PhantomControl Message Configuration File
-# Config Version - Do not modify this value manually
-config-version: 1.0
+# 配置文件版本（请勿手动修改，升级插件时会自动更新）
+config-version: 1
 
 # Main command messages
 command:
