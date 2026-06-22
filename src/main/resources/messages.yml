@@ -29,6 +29,7 @@ admin:
   status: "&a玩家 %player% 的幻翼状态：%status%"
   status-enabled: "&a已启用 &8| &a幻翼会生成"
   status-disabled: "&c已禁用 &8| &c幻翼不会生成"
+  status-offline: "&7(离线)"
   invalid-subcommand: "&c无效的管理员子命令！使用 /%maincommand% admin <enable|disable|status|batch|server> <参数>"
   
   # 批量管理命令消息
