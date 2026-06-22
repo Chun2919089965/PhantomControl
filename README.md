@@ -213,7 +213,7 @@ A: 将 `config.yml` 中的 `settings.debug.enabled` 设置为 `true`，然后重
 ## 开发者信息
 
 - **作者**：CHL_chun
-- **许可证**：[MIT](LICENSE.md)
+- **许可证**：[AGPL3](LICENSE.md)
 - **开源地址**：[https://github.com/Chun2919089965/PhantomControl](https://github.com/Chun2919089965/PhantomControl)
 
 欢迎提交 Issue 和 Pull Request，帮助改进插件！
