@@ -139,6 +139,27 @@ public class DatabaseManager {
         }
         return true;
     }
+
+    /**
+     * 直接从数据库读取玩家幻翼状态（绕过缓存）。
+     * 用于查询离线玩家等缓存未命中的场景。
+     */
+    public boolean getPlayerPhantomsStatusDirect(UUID playerId) {
+        CacheEntry entry = playerDataCache.get(playerId);
+        if (entry != null) {
+            return entry.value;
+        }
+        return databaseHandler.loadPlayerData(playerId);
+    }
+
+    /**
+     * 直接写入数据库并更新缓存（同步操作）。
+     * 用于管理离线玩家等场景。
+     */
+    public void setPlayerPhantomsStatusDirect(UUID playerId, boolean enabled) {
+        playerDataCache.put(playerId, new CacheEntry(enabled));
+        databaseHandler.savePlayerData(playerId, enabled);
+    }
     
     public void setPlayerPhantomsStatus(UUID playerId, boolean enabled) {
         playerDataCache.compute(playerId, (key, currentEntry) -> {
