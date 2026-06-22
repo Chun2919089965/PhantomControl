@@ -1,5 +1,6 @@
 package yyz.chl.phantomcontrol.command;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -98,41 +99,65 @@ public class PhantomControlCommand implements CommandExecutor {
             messageUtil.sendMessage(player, configManager.getMessage(player, "command.no-permission"));
             return;
         }
-        
+
         if (args.length < 3) {
             String mainCommand = configManager.getString("settings.commands.main-command");
             String message = configManager.formatMessage(player, "admin.usage", "%maincommand%", mainCommand);
             messageUtil.sendMessage(player, message);
             return;
         }
-        
+
         String adminSubCommand = args[1].toLowerCase();
         String targetPlayerName = args[2];
-        
+
+        // 先查在线玩家，再查离线玩家
         Player targetPlayer = org.bukkit.Bukkit.getPlayer(targetPlayerName);
-        if (targetPlayer == null) {
-            String message = configManager.formatMessage(player, "admin.player-not-found", "%player%", targetPlayerName);
-            messageUtil.sendMessage(player, message);
-            return;
+        boolean targetOffline = (targetPlayer == null);
+        java.util.UUID targetUuid = null;
+
+        if (targetOffline) {
+            OfflinePlayer offlinePlayer = resolveOfflinePlayer(targetPlayerName);
+            if (offlinePlayer == null) {
+                String message = configManager.formatMessage(player, "admin.player-not-found", "%player%", targetPlayerName);
+                messageUtil.sendMessage(player, message);
+                return;
+            }
+            targetUuid = offlinePlayer.getUniqueId();
         }
-        
+
         String mainCommand = configManager.getString("settings.commands.main-command");
-        
+
         switch (adminSubCommand) {
             case "enable":
-                enablePlayer(targetPlayer);
+                if (targetOffline) {
+                    plugin.getDatabaseManager().setPlayerPhantomsStatusDirect(targetUuid, true);
+                } else {
+                    enablePlayer(targetPlayer);
+                }
                 String enableMsg = configManager.formatMessage(player, "admin.enable-success", "%player%", targetPlayerName);
                 messageUtil.sendMessage(player, enableMsg);
                 break;
             case "disable":
-                disablePlayer(targetPlayer);
+                if (targetOffline) {
+                    plugin.getDatabaseManager().setPlayerPhantomsStatusDirect(targetUuid, false);
+                } else {
+                    disablePlayer(targetPlayer);
+                }
                 String disableMsg = configManager.formatMessage(player, "admin.disable-success", "%player%", targetPlayerName);
                 messageUtil.sendMessage(player, disableMsg);
                 break;
             case "status":
-                boolean status = phantomManager.hasPhantomsEnabled(targetPlayer);
+                boolean status;
+                if (targetOffline) {
+                    status = plugin.getDatabaseManager().getPlayerPhantomsStatusDirect(targetUuid);
+                } else {
+                    status = phantomManager.hasPhantomsEnabled(targetPlayer);
+                }
                 String statusText = status ? configManager.getMessage(player, "admin.status-enabled") : configManager.getMessage(player, "admin.status-disabled");
                 String statusMsg = configManager.formatMessage(player, "admin.status", "%player%", targetPlayerName, "%status%", statusText);
+                if (targetOffline) {
+                    statusMsg += " " + configManager.getMessage(player, "admin.status-offline");
+                }
                 messageUtil.sendMessage(player, statusMsg);
                 break;
             case "batch":
@@ -173,7 +198,7 @@ public class PhantomControlCommand implements CommandExecutor {
             messageUtil.sendMessage(player, batchUsage);
             return;
         }
-        
+
         String batchSubCommand = args[2].toLowerCase();
         if (!batchSubCommand.equals("enable") && !batchSubCommand.equals("disable")) {
             String mainCommand = configManager.getString("settings.commands.main-command");
@@ -181,15 +206,16 @@ public class PhantomControlCommand implements CommandExecutor {
             messageUtil.sendMessage(player, batchInvalid);
             return;
         }
-        
+
         int successCount = 0;
         int failCount = 0;
-        
+
         for (int i = 3; i < args.length; i++) {
             String targetPlayerName = args[i];
             Player targetPlayer = org.bukkit.Bukkit.getPlayer(targetPlayerName);
-            
+
             if (targetPlayer != null) {
+                // 在线玩家：走正常流程
                 if (batchSubCommand.equals("enable")) {
                     enablePlayer(targetPlayer);
                 } else {
@@ -197,19 +223,27 @@ public class PhantomControlCommand implements CommandExecutor {
                 }
                 successCount++;
             } else {
-                failCount++;
+                // 尝试离线玩家
+                OfflinePlayer offlinePlayer = resolveOfflinePlayer(targetPlayerName);
+                if (offlinePlayer != null) {
+                    boolean enabled = batchSubCommand.equals("enable");
+                    plugin.getDatabaseManager().setPlayerPhantomsStatusDirect(offlinePlayer.getUniqueId(), enabled);
+                    successCount++;
+                } else {
+                    failCount++;
+                }
             }
         }
-        
-        String action = batchSubCommand.equals("enable") 
-            ? configManager.getMessage(player, "command.status_enabled", "Enabled") 
+
+        String action = batchSubCommand.equals("enable")
+            ? configManager.getMessage(player, "command.status_enabled", "Enabled")
             : configManager.getMessage(player, "command.status_disabled", "Disabled");
         String batchResult = configManager.formatMessage(player, "admin.batch-success",
-            "%action%", action, 
-            "%success%", String.valueOf(successCount), 
+            "%action%", action,
+            "%success%", String.valueOf(successCount),
             "%fail%", String.valueOf(failCount));
         messageUtil.sendMessage(player, batchResult);
-        
+
         if (configManager.isDebugEnabled()) {
             plugin.getLogger().info("管理员 " + player.getName() + " 批量" + action + "幻翼: 成功 " + successCount + " 个, 失败 " + failCount + " 个");
         }
@@ -263,5 +297,17 @@ public class PhantomControlCommand implements CommandExecutor {
         if (configManager.isDebugEnabled()) {
             plugin.getLogger().info("管理员 " + player.getName() + " 查看服务器幻翼状态: 总在线 " + totalPlayers + " 人, 启用 " + enabledCount + " 人, 禁用 " + disabledCount + " 人");
         }
+    }
+
+    /**
+     * 通过玩家名解析离线玩家。
+     * 返回 null 表示该玩家从未登录过服务器。
+     */
+    private OfflinePlayer resolveOfflinePlayer(String playerName) {
+        OfflinePlayer offlinePlayer = org.bukkit.Bukkit.getOfflinePlayer(playerName);
+        if (offlinePlayer == null || !offlinePlayer.hasPlayedBefore()) {
+            return null;
+        }
+        return offlinePlayer;
     }
 }
