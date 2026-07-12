@@ -6,6 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import yyz.chl.phantomcontrol.PhantomControl;
+import yyz.chl.phantomcontrol.api.PhantomStatusChangeSource;
 import yyz.chl.phantomcontrol.manager.ConfigManager;
 import yyz.chl.phantomcontrol.manager.GUIManager;
 import yyz.chl.phantomcontrol.manager.PhantomManager;
@@ -136,7 +137,7 @@ public class PhantomControlCommand implements CommandExecutor {
                 if (targetOffline) {
                     plugin.getDatabaseManager().setPlayerPhantomsStatusDirect(targetUuid, true);
                 } else {
-                    enablePlayer(targetPlayer);
+                    enablePlayer(targetPlayer, PhantomStatusChangeSource.ADMIN_COMMAND);
                 }
                 String enableMsg = configManager.formatMessage(player, "admin.enable-success", "%player%", targetPlayerName);
                 messageUtil.sendMessage(player, enableMsg);
@@ -147,7 +148,7 @@ public class PhantomControlCommand implements CommandExecutor {
                     plugin.getDatabaseManager().setPlayerPhantomsStatusDirect(targetUuid, false);
                     disabled = true;
                 } else {
-                    disabled = disablePlayer(targetPlayer);
+                    disabled = disablePlayer(targetPlayer, PhantomStatusChangeSource.ADMIN_COMMAND);
                 }
                 if (disabled) {
                     String disableMsg = configManager.formatMessage(player, "admin.disable-success", "%player%", targetPlayerName);
@@ -228,10 +229,13 @@ public class PhantomControlCommand implements CommandExecutor {
             if (targetPlayer != null) {
                 // 在线玩家：走正常流程
                 if (batchSubCommand.equals("enable")) {
-                    enablePlayer(targetPlayer);
-                    successCount++;
+                    if (enablePlayer(targetPlayer, PhantomStatusChangeSource.ADMIN_COMMAND)) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
                 } else {
-                    if (disablePlayer(targetPlayer)) {
+                    if (disablePlayer(targetPlayer, PhantomStatusChangeSource.ADMIN_COMMAND)) {
                         successCount++;
                     } else {
                         failCount++;
@@ -264,12 +268,19 @@ public class PhantomControlCommand implements CommandExecutor {
         }
     }
     
-    private void enablePlayer(Player player) {
-        phantomManager.enablePhantoms(player);
+    private boolean enablePlayer(Player player) {
+        return enablePlayer(player, PhantomStatusChangeSource.COMMAND);
+    }
+
+    private boolean enablePlayer(Player player, PhantomStatusChangeSource source) {
+        if (!phantomManager.enablePhantoms(player, source)) {
+            return false;
+        }
         String message = configManager.getMessage(player, "command.enabled");
         messageUtil.sendOnChange(player, message,
             configManager.getMessage(player, "command.enabled"),
             configManager.getMessage(player, "command.enabled"));
+        return true;
     }
     
     /**
@@ -277,10 +288,16 @@ public class PhantomControlCommand implements CommandExecutor {
      * @return true 表示已成功禁用，false 表示玩家无权限禁用
      */
     private boolean disablePlayer(Player player) {
+        return disablePlayer(player, PhantomStatusChangeSource.COMMAND);
+    }
+
+    private boolean disablePlayer(Player player, PhantomStatusChangeSource source) {
         if (!phantomManager.canDisablePhantoms(player)) {
             return false;
         }
-        phantomManager.disablePhantoms(player);
+        if (!phantomManager.disablePhantoms(player, source)) {
+            return false;
+        }
         String message = configManager.getMessage(player, "command.disabled");
         messageUtil.sendOnChange(player, message,
             configManager.getMessage(player, "command.disabled"),

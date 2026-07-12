@@ -1,11 +1,12 @@
 package yyz.chl.phantomcontrol.event;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import yyz.chl.phantomcontrol.api.PhantomStatusChangeSource;
 
-public class PhantomStatusChangeEvent extends Event {
+public class PhantomStatusPreChangeEvent extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
 
@@ -13,17 +14,10 @@ public class PhantomStatusChangeEvent extends Event {
     private final boolean oldEnabled;
     private final boolean newEnabled;
     private final PhantomStatusChangeSource source;
+    private boolean cancelled;
 
-    @Deprecated
-    public PhantomStatusChangeEvent(Player player, boolean enabled) {
-        this.player = player;
-        this.oldEnabled = !enabled;
-        this.newEnabled = enabled;
-        this.source = PhantomStatusChangeSource.PLUGIN;
-    }
-
-    public PhantomStatusChangeEvent(Player player, boolean oldEnabled, boolean newEnabled,
-                                    PhantomStatusChangeSource source) {
+    public PhantomStatusPreChangeEvent(Player player, boolean oldEnabled, boolean newEnabled,
+                                       PhantomStatusChangeSource source) {
         this.player = player;
         this.oldEnabled = oldEnabled;
         this.newEnabled = newEnabled;
@@ -38,20 +32,34 @@ public class PhantomStatusChangeEvent extends Event {
         return oldEnabled;
     }
 
-    public boolean isEnabled() {
-        return newEnabled;
-    }
-
     public boolean getOldEnabled() {
         return oldEnabled;
+    }
+
+    public boolean isEnabled() {
+        return newEnabled;
     }
 
     public boolean getNewEnabled() {
         return newEnabled;
     }
 
+    public boolean willBeEnabled() {
+        return newEnabled;
+    }
+
     public PhantomStatusChangeSource getSource() {
         return source;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 
     @Override

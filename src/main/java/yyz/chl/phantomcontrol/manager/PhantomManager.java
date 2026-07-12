@@ -3,15 +3,13 @@ package yyz.chl.phantomcontrol.manager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import yyz.chl.phantomcontrol.PhantomControl;
+import yyz.chl.phantomcontrol.api.PhantomStatusChangeSource;
 import yyz.chl.phantomcontrol.event.PhantomStatusChangeEvent;
+import yyz.chl.phantomcontrol.event.PhantomStatusPreChangeEvent;
 
 import java.util.List;
 import java.util.UUID;
 
-/**
- * 幻翼控制核心管理器。
- * 幻翼拦截由 {@link yyz.chl.phantomcontrol.listener.PhantomSpawnListener} 通过 Paper 预生成事件负责。
- */
 public class PhantomManager {
 
     private final DatabaseManager databaseManager;
@@ -41,36 +39,56 @@ public class PhantomManager {
         this.worldBlacklist = configManager.getStringList("whitelist.world-blacklist");
     }
 
-    public void enablePhantoms(Player player) {
-        UUID playerId = player.getUniqueId();
+    public boolean enablePhantoms(Player player) {
+        return setPhantomsEnabled(player, true, PhantomStatusChangeSource.PLUGIN);
+    }
 
-        databaseManager.setPlayerPhantomsStatus(playerId, true);
-
-        Bukkit.getPluginManager().callEvent(new PhantomStatusChangeEvent(player, true));
-
-        if (configManager.isDebugEnabled()) {
-            plugin.getLogger().info("已为玩家 " + player.getName() + " (" + playerId + ") 启用幻翼");
-        }
+    public boolean enablePhantoms(Player player, PhantomStatusChangeSource source) {
+        return setPhantomsEnabled(player, true, source);
     }
 
     public boolean canDisablePhantoms(Player player) {
         return player.hasPermission("phantomcontrol.use");
     }
 
-    public void disablePhantoms(Player player) {
-        if (!canDisablePhantoms(player)) {
-            return;
+    public boolean disablePhantoms(Player player) {
+        return setPhantomsEnabled(player, false, PhantomStatusChangeSource.PLUGIN);
+    }
+
+    public boolean disablePhantoms(Player player, PhantomStatusChangeSource source) {
+        return setPhantomsEnabled(player, false, source);
+    }
+
+    public boolean setPhantomsEnabled(Player player, boolean enabled, PhantomStatusChangeSource source) {
+        if (source == null) {
+            source = PhantomStatusChangeSource.PLUGIN;
+        }
+
+        if (!enabled && !canDisablePhantoms(player)) {
+            return false;
         }
 
         UUID playerId = player.getUniqueId();
+        boolean oldEnabled = databaseManager.getPlayerPhantomsStatus(playerId);
+        if (oldEnabled == enabled) {
+            return true;
+        }
 
-        databaseManager.setPlayerPhantomsStatus(playerId, false);
+        PhantomStatusPreChangeEvent preChangeEvent = new PhantomStatusPreChangeEvent(player, oldEnabled, enabled, source);
+        Bukkit.getPluginManager().callEvent(preChangeEvent);
+        if (preChangeEvent.isCancelled()) {
+            return false;
+        }
 
-        Bukkit.getPluginManager().callEvent(new PhantomStatusChangeEvent(player, false));
+        databaseManager.setPlayerPhantomsStatus(playerId, enabled);
+        Bukkit.getPluginManager().callEvent(new PhantomStatusChangeEvent(player, oldEnabled, enabled, source));
 
         if (configManager.isDebugEnabled()) {
-            plugin.getLogger().info("已为玩家 " + player.getName() + " (" + playerId + ") 禁用幻翼");
+            plugin.getLogger().info("Updated phantom status for " + player.getName() + " (" + playerId + ") to "
+                    + (enabled ? "enabled" : "disabled") + " via " + source);
         }
+
+        return true;
     }
 
     public boolean hasPhantomsEnabled(Player player) {
@@ -78,42 +96,24 @@ public class PhantomManager {
         return databaseManager.getPlayerPhantomsStatus(playerId);
     }
 
-    /**
-     * 应用幻翼设置。玩家加入或切换世界时调用。
-     * 对无权限玩家强制启用幻翼（防御性修复，正常流程不会走到这里）。
-     */
     public void applyPhantomSettings(Player player) {
         if (!isWorldAllowed(player.getWorld().getName())) {
             return;
         }
 
-        if (!canDisablePhantoms(player)) {
-            if (!hasPhantomsEnabled(player)) {
-                enablePhantoms(player);
-            }
+        if (!canDisablePhantoms(player) && !hasPhantomsEnabled(player)) {
+            enablePhantoms(player, PhantomStatusChangeSource.PERMISSION_ENFORCE);
         }
     }
 
-    /**
-     * 检查世界是否在幻翼控制范围内（公开方法，供事件监听器调用）。
-     */
     public boolean isWorldAllowed(String worldName) {
-        if (worldWhitelistEnabled && !worldWhitelist.isEmpty()) {
-            if (!worldWhitelist.contains(worldName)) {
-                return false;
-            }
+        if (worldWhitelistEnabled && !worldWhitelist.isEmpty() && !worldWhitelist.contains(worldName)) {
+            return false;
         }
 
-        if (worldBlacklistEnabled && !worldBlacklist.isEmpty()) {
-            if (worldBlacklist.contains(worldName)) {
-                return false;
-            }
-        }
-
-        return true;
+        return !worldBlacklistEnabled || worldBlacklist.isEmpty() || !worldBlacklist.contains(worldName);
     }
 
     public void shutdown() {
-        // 不再有定时任务需要取消，保留方法兼容 onDisable 调用
     }
 }

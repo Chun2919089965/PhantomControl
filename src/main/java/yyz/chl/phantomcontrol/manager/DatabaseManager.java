@@ -196,6 +196,30 @@ public class DatabaseManager {
         }
     }
 
+    public CompletableFuture<Boolean> getPlayerPhantomsStatusAsync(UUID playerId) {
+        CacheEntry entry = playerDataCache.get(playerId);
+        if (entry != null) {
+            entry.timestamp = System.currentTimeMillis();
+            return CompletableFuture.completedFuture(entry.value);
+        }
+
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        synchronized (databaseIoLock) {
+            try {
+                databaseExecutor.submit(() -> {
+                    try {
+                        result.complete(databaseHandler.loadPlayerData(playerId));
+                    } catch (RuntimeException e) {
+                        result.completeExceptionally(e);
+                    }
+                });
+            } catch (RejectedExecutionException e) {
+                result.completeExceptionally(e);
+            }
+        }
+        return result;
+    }
+
     /**
      * Directly writes storage and updates cache. Intended for offline admin operations.
      */
@@ -205,6 +229,30 @@ public class DatabaseManager {
             waitForPendingDatabaseTasksLocked();
             databaseHandler.savePlayerData(playerId, enabled);
         }
+    }
+
+    public CompletableFuture<Boolean> setPlayerPhantomsStatusAsync(UUID playerId, boolean enabled) {
+        playerDataCache.put(playerId, new CacheEntry(enabled));
+        loadingPlayerIds.remove(playerId);
+
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        Runnable saveTask = () -> {
+            try {
+                databaseHandler.savePlayerData(playerId, enabled);
+                result.complete(true);
+            } catch (RuntimeException e) {
+                result.completeExceptionally(e);
+            }
+        };
+
+        synchronized (databaseIoLock) {
+            try {
+                databaseExecutor.submit(saveTask);
+            } catch (RejectedExecutionException e) {
+                saveTask.run();
+            }
+        }
+        return result;
     }
 
     public void setPlayerPhantomsStatus(UUID playerId, boolean enabled) {

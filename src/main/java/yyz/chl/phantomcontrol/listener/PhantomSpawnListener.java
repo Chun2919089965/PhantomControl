@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import yyz.chl.phantomcontrol.PhantomControl;
+import yyz.chl.phantomcontrol.event.PhantomSpawnBlockedEvent;
 import yyz.chl.phantomcontrol.manager.ConfigManager;
 import yyz.chl.phantomcontrol.manager.PhantomManager;
 
@@ -37,6 +38,8 @@ public class PhantomSpawnListener implements Listener {
         if (!phantomManager.hasPhantomsEnabled(target)) {
             event.setCancelled(true);
             event.setShouldAbortSpawn(true);
+            plugin.getServer().getPluginManager().callEvent(
+                new PhantomSpawnBlockedEvent(target, String.valueOf(event.getReason())));
             if (configManager.isDebugEnabled()) {
                 plugin.getLogger().info("[幻翼拦截] 已拦截 " + target.getName() + " 的幻翼生成 ("
                         + event.getReason() + ")");

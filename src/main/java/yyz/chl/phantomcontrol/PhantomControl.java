@@ -1,9 +1,12 @@
 package yyz.chl.phantomcontrol;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.MultiLineChart;
+import yyz.chl.phantomcontrol.api.DefaultPhantomControlAPI;
+import yyz.chl.phantomcontrol.api.PhantomControlAPI;
 import yyz.chl.phantomcontrol.command.CommandManager;
 import yyz.chl.phantomcontrol.listener.ListenerManager;
 import yyz.chl.phantomcontrol.manager.ConfigManager;
@@ -23,6 +26,7 @@ public class PhantomControl extends JavaPlugin {
     private CommandManager commandManager;
     private ListenerManager listenerManager;
     private MessageUtil messageUtil;
+    private PhantomControlAPI api;
     private Object autoSaveTaskId;
 
     @Override
@@ -54,6 +58,8 @@ public class PhantomControl extends JavaPlugin {
         }
         
         phantomManager = new PhantomManager(this, databaseManager, configManager);
+        api = new DefaultPhantomControlAPI(phantomManager, databaseManager);
+        getServer().getServicesManager().register(PhantomControlAPI.class, api, this, ServicePriority.Normal);
         
         guiManager = new GUIManager(phantomManager, configManager);
         
@@ -112,6 +118,11 @@ public class PhantomControl extends JavaPlugin {
             phantomManager.shutdown();
         }
 
+        if (api != null) {
+            getServer().getServicesManager().unregister(PhantomControlAPI.class, api);
+            api = null;
+        }
+
         if (databaseManager != null) {
             databaseManager.closeConnection();
         }
@@ -139,6 +150,10 @@ public class PhantomControl extends JavaPlugin {
 
     public PhantomManager getPhantomManager() {
         return phantomManager;
+    }
+
+    public PhantomControlAPI getAPI() {
+        return api;
     }
     
     public CommandManager getCommandManager() {

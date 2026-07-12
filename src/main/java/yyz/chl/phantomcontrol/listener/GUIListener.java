@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import yyz.chl.phantomcontrol.api.PhantomStatusChangeSource;
 import yyz.chl.phantomcontrol.manager.ConfigManager;
 import yyz.chl.phantomcontrol.manager.GUIManager;
 import yyz.chl.phantomcontrol.manager.PhantomManager;
@@ -50,7 +51,9 @@ public class GUIListener implements Listener {
     }
     
     private void enablePlayer(Player player) {
-        phantomManager.enablePhantoms(player);
+        if (!phantomManager.enablePhantoms(player, PhantomStatusChangeSource.GUI)) {
+            return;
+        }
         String message = configManager.getMessage(player, "command.enabled");
         messageUtil.sendOnChange(player, message,
             configManager.getMessage(player, "command.enabled"),
@@ -63,7 +66,9 @@ public class GUIListener implements Listener {
             messageUtil.sendMessage(player, configManager.getMessage(player, "command.cannot-disable"));
             return;
         }
-        phantomManager.disablePhantoms(player);
+        if (!phantomManager.disablePhantoms(player, PhantomStatusChangeSource.GUI)) {
+            return;
+        }
         String message = configManager.getMessage(player, "command.disabled");
         messageUtil.sendOnChange(player, message,
             configManager.getMessage(player, "command.disabled"),
