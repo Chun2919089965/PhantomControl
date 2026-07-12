@@ -33,6 +33,7 @@ public class DatabaseManager {
     private DatabaseHandler databaseHandler;
     private final ConcurrentHashMap<UUID, CacheEntry> playerDataCache;
     private final Set<UUID> activePlayerIds;
+    private final Set<UUID> loadingPlayerIds;
     private final ConfigManager configManager;
     private final PhantomControl plugin;
     private final ScheduledExecutorService cleanupExecutor;
@@ -44,6 +45,7 @@ public class DatabaseManager {
         this.configManager = configManager;
         this.playerDataCache = new ConcurrentHashMap<>();
         this.activePlayerIds = ConcurrentHashMap.newKeySet();
+        this.loadingPlayerIds = ConcurrentHashMap.newKeySet();
         this.cleanupExecutor = Executors.newSingleThreadScheduledExecutor();
         this.databaseExecutor = Executors.newSingleThreadExecutor();
         initializeDatabase();
@@ -109,6 +111,7 @@ public class DatabaseManager {
             return CompletableFuture.completedFuture(existingEntry.value);
         }
 
+        loadingPlayerIds.add(playerId);
         CompletableFuture<Boolean> result = new CompletableFuture<>();
         synchronized (databaseIoLock) {
             try {
@@ -116,7 +119,11 @@ public class DatabaseManager {
                     try {
                         boolean phantomsEnabled = databaseHandler.loadPlayerData(playerId);
                         if (activePlayerIds.contains(playerId)) {
-                            playerDataCache.put(playerId, new CacheEntry(phantomsEnabled));
+                            playerDataCache.putIfAbsent(playerId, new CacheEntry(phantomsEnabled));
+                            CacheEntry cachedEntry = playerDataCache.get(playerId);
+                            if (cachedEntry != null) {
+                                cachedEntry.timestamp = System.currentTimeMillis();
+                            }
                         }
 
                         if (configManager.isDebugEnabled()) {
@@ -127,9 +134,12 @@ public class DatabaseManager {
                         result.complete(phantomsEnabled);
                     } catch (RuntimeException e) {
                         result.completeExceptionally(e);
+                    } finally {
+                        loadingPlayerIds.remove(playerId);
                     }
                 });
             } catch (RejectedExecutionException e) {
+                loadingPlayerIds.remove(playerId);
                 result.completeExceptionally(e);
             }
         }
@@ -140,6 +150,7 @@ public class DatabaseManager {
         UUID playerId = player.getUniqueId();
         String playerName = player.getName();
         activePlayerIds.remove(playerId);
+        loadingPlayerIds.remove(playerId);
 
         CacheEntry entry = playerDataCache.remove(playerId);
         if (entry != null) {
@@ -164,6 +175,9 @@ public class DatabaseManager {
         if (entry != null) {
             entry.timestamp = System.currentTimeMillis();
             return entry.value;
+        }
+        if (loadingPlayerIds.contains(playerId)) {
+            return false;
         }
         return true;
     }

@@ -27,7 +27,7 @@ public class PhantomSpawnListener implements Listener {
         this.configManager = configManager;
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPhantomPreSpawn(PhantomPreSpawnEvent event) {
         Entity spawningEntity = event.getSpawningEntity();
         if (!(spawningEntity instanceof Player target)) return;
