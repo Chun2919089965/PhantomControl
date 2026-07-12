@@ -28,7 +28,7 @@ PhantomControl 是一款功能强大的 Minecraft 服务器插件，用于管理
 - ✅ **多语言支持** — 支持中文和英文，可自动根据玩家客户端语言调整
 - ✅ **GUI 界面** — 提供图形化控制界面，方便玩家操作
 - ✅ **PlaceholderAPI 支持** — 提供占位符供其他插件调用
-- ✅ **开发者 API** — 提供自定义 Event，方便其他插件监听状态变更
+- ✅ **开发者 API** — 提供 Bukkit ServicesManager API、异步状态读写和自定义事件，方便其他插件接入
 - ✅ **bStats 集成** — 提供插件使用情况统计，可在配置文件中控制开启或关闭
 - ✅ **调试模式** — 可配置的详细日志输出，便于排查问题
 - ✅ **配置验证** — 自动验证配置文件完整性，配置错误时安全禁用插件
@@ -169,24 +169,94 @@ PhantomControl 支持 PlaceholderAPI。温馨提示：PlaceholderAPI 的 2.11.7 
 
 ## 开发者 API
 
-PhantomControl v2 提供自定义 Event，方便其他插件监听幻翼状态变更。
+PhantomControl v2 提供公开 API 和自定义事件，方便其他插件查询、修改和监听玩家幻翼状态。API 通过 Bukkit `ServicesManager` 注册，推荐其他插件通过服务方式获取，不要直接依赖内部 Manager 类。
+
+### 获取 API
 
 ```java
-import yyz.chl.phantomcontrol.event.PhantomStatusChangeEvent;
+import org.bukkit.Bukkit;
+import yyz.chl.phantomcontrol.api.PhantomControlAPI;
 
-@EventHandler
-public void onPhantomChange(PhantomStatusChangeEvent event) {
-    Player player = event.getPlayer();
-    boolean nowEnabled = event.isEnabled();
-
-    getLogger().info(player.getName() + " 的幻翼" + (nowEnabled ? "已启用" : "已禁用"));
-    // 可以在这里做任何联动：记录日志、同步数据等
+PhantomControlAPI api = Bukkit.getServicesManager().load(PhantomControlAPI.class);
+if (api == null) {
+    return;
 }
 ```
 
-| API | 描述 |
+### 查询和修改在线玩家状态
+
+```java
+boolean enabled = api.arePhantomsEnabled(player);
+
+api.disablePhantoms(player);
+api.enablePhantoms(player);
+api.setPhantomsEnabled(player, false);
+```
+
+### 异步查询和修改 UUID 状态
+
+离线玩家或只知道 UUID 时，建议使用异步 API，避免阻塞服务器线程。
+
+```java
+api.arePhantomsEnabled(uuid).thenAccept(enabled -> {
+    Bukkit.getLogger().info("Phantom status: " + enabled);
+});
+
+api.setPhantomsEnabled(uuid, false).thenAccept(success -> {
+    Bukkit.getLogger().info("Saved phantom status: " + success);
+});
+```
+
+### 监听状态变更
+
+`PhantomStatusPreChangeEvent` 会在状态写入前触发，可以取消；`PhantomStatusChangeEvent` 会在状态写入后触发，包含旧状态、新状态和变更来源。
+
+```java
+import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import yyz.chl.phantomcontrol.event.PhantomStatusChangeEvent;
+import yyz.chl.phantomcontrol.event.PhantomStatusPreChangeEvent;
+
+public class PhantomApiListener implements Listener {
+
+    @EventHandler
+    public void onPhantomPreChange(PhantomStatusPreChangeEvent event) {
+        if (!event.willBeEnabled() && event.getPlayer().hasPermission("example.force-phantoms")) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPhantomChange(PhantomStatusChangeEvent event) {
+        Bukkit.getLogger().info(event.getPlayer().getName()
+            + " phantom status: " + event.wasEnabled()
+            + " -> " + event.isEnabled()
+            + " via " + event.getSource());
+    }
+}
+```
+
+### 监听幻翼拦截
+
+```java
+import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import yyz.chl.phantomcontrol.event.PhantomSpawnBlockedEvent;
+
+@EventHandler
+public void onPhantomBlocked(PhantomSpawnBlockedEvent event) {
+    Bukkit.getLogger().info("Blocked phantom spawn for " + event.getPlayer().getName());
+}
+```
+
+| API / Event | 描述 |
 |-----|------|
-| `PhantomStatusChangeEvent` | 玩家幻翼状态变更时触发，包含玩家对象和当前状态 |
+| `PhantomControlAPI` | 公开 API 入口，支持在线玩家状态查询/修改、UUID 异步查询/写入、权限和世界控制范围检查 |
+| `PhantomStatusChangeSource` | 状态变更来源，包括 `COMMAND`、`GUI`、`ADMIN_COMMAND`、`API`、`PERMISSION_ENFORCE`、`PLUGIN` |
+| `PhantomStatusPreChangeEvent` | 玩家幻翼状态变更前触发，可取消，包含旧状态、新状态和来源 |
+| `PhantomStatusChangeEvent` | 玩家幻翼状态变更后触发，包含旧状态、新状态和来源 |
+| `PhantomSpawnBlockedEvent` | 插件拦截幻翼生成时触发，包含目标玩家和生成原因 |
 
 ## 常见问题
 
