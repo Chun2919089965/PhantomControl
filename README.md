@@ -1,6 +1,6 @@
 # PhantomControl
 
-![Version](https://img.shields.io/badge/版本-v2-blue)
+![Version](https://img.shields.io/badge/版本-v2.1.0-blue)
 ![License](https://img.shields.io/badge/开源许可证-AGPL3-green)
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%2B-orange)
 ![Folia](https://img.shields.io/badge/Folia-支持-brightgreen)
@@ -169,7 +169,7 @@ PhantomControl 支持 PlaceholderAPI。温馨提示：PlaceholderAPI 的 2.11.7 
 
 ## 开发者 API
 
-PhantomControl v2 提供公开 API 和自定义事件，方便其他插件查询、修改和监听玩家幻翼状态。API 通过 Bukkit `ServicesManager` 注册，推荐其他插件通过服务方式获取，不要直接依赖内部 Manager 类。
+PhantomControl v2.1.0 提供公开 API 和自定义事件，方便其他插件查询、修改和监听玩家幻翼状态。API 通过 Bukkit `ServicesManager` 注册，推荐其他插件通过服务方式获取，不要直接依赖内部 Manager 类。
 
 ### 获取 API
 
@@ -285,7 +285,7 @@ A: 将 `config.yml` 中的 `settings.debug.enabled` 设置为 `true`，然后重
 
 - **作者**：CHL_chun
 - **许可证**：[AGPL3](https://github.com/Chun2919089965/PhantomControl/blob/main/LICENSE)
-- **最新版本**：v2
+- **最新版本**：v2.1.0
 - **开源地址**：[https://github.com/Chun2919089965/PhantomControl](https://github.com/Chun2919089965/PhantomControl)
 
 欢迎提交 Issue 和 Pull Request，帮助改进插件！
