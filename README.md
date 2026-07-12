@@ -37,7 +37,7 @@ PhantomControl 是一款功能强大的 Minecraft 服务器插件，用于管理
 
 > ⚠️ 本插件仅支持 Minecraft 1.20.1+ 的 Paper 和 Folia，不支持 Spigot。
 
-1. 下载最新版本的 `PhantomControl.jar` 文件
+1. 下载最新版本的 `PhantomControl-版本号.jar` 文件，例如 `PhantomControl-2.1.0.jar`
 2. 将 jar 文件放入服务器的 `plugins` 文件夹中
 3. 重启服务器，插件会自动生成配置文件
 4. 根据需要修改配置文件，然后使用 `/phantomcontrolreload` 命令重载配置
