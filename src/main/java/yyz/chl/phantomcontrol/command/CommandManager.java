@@ -12,10 +12,11 @@ import yyz.chl.phantomcontrol.util.MessageUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CommandManager {
 
@@ -26,6 +27,10 @@ public class CommandManager {
     private final MessageUtil messageUtil;
     private CommandMap commandMap;
     private Map<String, Command> knownCommands;
+    private final String registeredMainCommand;
+    private final Set<String> registeredMainAliases;
+    private final String registeredReloadCommand;
+    private final Set<String> registeredReloadAliases;
     
     public CommandManager(PhantomControl plugin, ConfigManager configManager, 
                            PhantomManager phantomManager, GUIManager guiManager, MessageUtil messageUtil) {
@@ -36,6 +41,10 @@ public class CommandManager {
         this.messageUtil = messageUtil;
         this.commandMap = getCommandMap();
         this.knownCommands = getKnownCommands();
+        this.registeredMainCommand = normalize(configManager.getString("settings.commands.main-command"));
+        this.registeredMainAliases = normalize(configManager.getStringList("settings.commands.main-aliases"));
+        this.registeredReloadCommand = normalize(configManager.getString("settings.commands.reload-command"));
+        this.registeredReloadAliases = normalize(configManager.getStringList("settings.commands.reload-aliases"));
         registerCommands();
     }
     
@@ -74,19 +83,18 @@ public class CommandManager {
             }
         }
 
-        plugin.getLogger().warning("CommandMap 不包含 knownCommands 字段，旧命令别名可能无法完全清理");
+        plugin.getLogger().warning("CommandMap 不包含 knownCommands 字段，无法完整检查命令冲突");
         return null;
     }
     
     private void registerCommands() {
-        unregisterPluginCommands();
-
-        String mainCommand = configManager.getString("settings.commands.main-command");
+        String mainCommand = registeredMainCommand;
         List<String> mainAliases = configManager.getStringList("settings.commands.main-aliases");
-        String reloadCommand = configManager.getString("settings.commands.reload-command");
+        String reloadCommand = registeredReloadCommand;
         List<String> reloadAliases = configManager.getStringList("settings.commands.reload-aliases");
         
-        PhantomControlCommand mainExecutor = new PhantomControlCommand(plugin, phantomManager, configManager, guiManager, messageUtil);
+        PhantomControlCommand mainExecutor = new PhantomControlCommand(
+                plugin, phantomManager, configManager, guiManager, messageUtil, mainCommand, reloadCommand);
         PhantomControlTabCompleter mainTabCompleter = new PhantomControlTabCompleter();
         ReloadCommand reloadExecutor = new ReloadCommand(plugin, configManager);
         
@@ -94,23 +102,21 @@ public class CommandManager {
         registerCommand(reloadCommand, reloadExecutor, null, reloadAliases);
     }
 
-    private void unregisterPluginCommands() {
-        if (commandMap == null || knownCommands == null) {
-            return;
-        }
+    public boolean isConfiguredCommandRegistrationCurrent() {
+        return registeredMainCommand.equals(normalize(configManager.getString("settings.commands.main-command")))
+                && registeredMainAliases.equals(normalize(configManager.getStringList("settings.commands.main-aliases")))
+                && registeredReloadCommand.equals(normalize(configManager.getString("settings.commands.reload-command")))
+                && registeredReloadAliases.equals(normalize(configManager.getStringList("settings.commands.reload-aliases")));
+    }
 
-        Set<Command> pluginCommands = new HashSet<>();
-        for (Command command : knownCommands.values()) {
-            if (isPluginCommand(command)) {
-                pluginCommands.add(command);
-            }
-        }
+    private static String normalize(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT);
+    }
 
-        for (Command command : pluginCommands) {
-            command.unregister(commandMap);
-        }
-
-        knownCommands.entrySet().removeIf(entry -> isPluginCommand(entry.getValue()));
+    private static Set<String> normalize(List<String> values) {
+        return values.stream()
+                .map(CommandManager::normalize)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private boolean isPluginCommand(Command command) {

@@ -10,12 +10,22 @@ import java.util.UUID;
 public class MySQLDatabaseHandler implements DatabaseHandler {
     
     private final PhantomControl plugin;
-    private final ConfigManager configManager;
+    private final String host;
+    private final int port;
+    private final String database;
+    private final String username;
+    private final String password;
+    private final String tablePrefix;
     private HikariDataSource dataSource;
     
     public MySQLDatabaseHandler(PhantomControl plugin, ConfigManager configManager) {
         this.plugin = plugin;
-        this.configManager = configManager;
+        this.host = configManager.getMySQLHost();
+        this.port = configManager.getMySQLPort();
+        this.database = configManager.getMySQLDatabase();
+        this.username = configManager.getMySQLUsername();
+        this.password = configManager.getMySQLPassword();
+        this.tablePrefix = configManager.getMySQLPrefix();
     }
     
     private Connection getConnection() throws SQLException {
@@ -27,12 +37,12 @@ public class MySQLDatabaseHandler implements DatabaseHandler {
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(String.format(
             "jdbc:mysql://%s:%d/%s",
-            configManager.getMySQLHost(),
-            configManager.getMySQLPort(),
-            configManager.getMySQLDatabase()
+            host,
+            port,
+            database
         ));
-        hikariConfig.setUsername(configManager.getMySQLUsername());
-        hikariConfig.setPassword(configManager.getMySQLPassword());
+        hikariConfig.setUsername(username);
+        hikariConfig.setPassword(password);
         hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
         hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
         hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -59,8 +69,6 @@ public class MySQLDatabaseHandler implements DatabaseHandler {
     
     @Override
     public void initialize() {
-        String tablePrefix = configManager.getMySQLPrefix();
-        
         String createTableSQL = String.format(
             "CREATE TABLE IF NOT EXISTS %splayerdata ("
             + "player_id VARCHAR(36) PRIMARY KEY,"
@@ -81,7 +89,6 @@ public class MySQLDatabaseHandler implements DatabaseHandler {
     
     @Override
     public boolean loadPlayerData(UUID playerId) {
-        String tablePrefix = configManager.getMySQLPrefix();
         String playerIdStr = playerId.toString();
         
         String query = String.format(
@@ -107,7 +114,6 @@ public class MySQLDatabaseHandler implements DatabaseHandler {
     
     @Override
     public void savePlayerData(UUID playerId, boolean phantomsEnabled) {
-        String tablePrefix = configManager.getMySQLPrefix();
         String playerIdStr = playerId.toString();
         
         String query = String.format(
@@ -129,8 +135,6 @@ public class MySQLDatabaseHandler implements DatabaseHandler {
     
     @Override
     public void saveAllData(Map<UUID, Boolean> playerDataMap) {
-        String tablePrefix = configManager.getMySQLPrefix();
-        
         String query = String.format(
             "INSERT INTO %splayerdata (player_id, phantoms_enabled) VALUES (?, ?) ON DUPLICATE KEY UPDATE phantoms_enabled = VALUES(phantoms_enabled)",
             tablePrefix

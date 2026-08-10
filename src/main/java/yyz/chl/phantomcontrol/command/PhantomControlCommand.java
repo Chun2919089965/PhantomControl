@@ -19,14 +19,19 @@ public class PhantomControlCommand implements CommandExecutor {
     private final ConfigManager configManager;
     private final GUIManager guiManager;
     private final MessageUtil messageUtil;
+    private final String registeredMainCommand;
+    private final String registeredReloadCommand;
     
     public PhantomControlCommand(PhantomControl plugin, PhantomManager phantomManager, 
-                                  ConfigManager configManager, GUIManager guiManager, MessageUtil messageUtil) {
+                                  ConfigManager configManager, GUIManager guiManager, MessageUtil messageUtil,
+                                  String registeredMainCommand, String registeredReloadCommand) {
         this.plugin = plugin;
         this.phantomManager = phantomManager;
         this.configManager = configManager;
         this.guiManager = guiManager;
         this.messageUtil = messageUtil;
+        this.registeredMainCommand = registeredMainCommand;
+        this.registeredReloadCommand = registeredReloadCommand;
     }
     
     @Override
@@ -105,14 +110,37 @@ public class PhantomControlCommand implements CommandExecutor {
             return;
         }
 
-        if (args.length < 3) {
-            String mainCommand = configManager.getString("settings.commands.main-command");
-            String message = configManager.formatMessage(player, "admin.usage", "%maincommand%", mainCommand);
+        if (args.length < 2) {
+            String message = configManager.formatMessage(
+                    player, "admin.usage", "%maincommand%", registeredMainCommand);
             messageUtil.sendMessage(player, message);
             return;
         }
 
         String adminSubCommand = args[1].toLowerCase();
+        if (adminSubCommand.equals("server")) {
+            handleServerCommand(player);
+            return;
+        }
+        if (adminSubCommand.equals("batch")) {
+            handleBatchCommand(player, args);
+            return;
+        }
+        if (!adminSubCommand.equals("enable")
+                && !adminSubCommand.equals("disable")
+                && !adminSubCommand.equals("status")) {
+            String invalidMsg = configManager.formatMessage(
+                    player, "admin.invalid-subcommand", "%maincommand%", registeredMainCommand);
+            messageUtil.sendMessage(player, invalidMsg);
+            return;
+        }
+        if (args.length < 3) {
+            String message = configManager.formatMessage(
+                    player, "admin.usage", "%maincommand%", registeredMainCommand);
+            messageUtil.sendMessage(player, message);
+            return;
+        }
+
         String targetPlayerName = args[2];
 
         // 先查在线玩家，再查离线玩家
@@ -129,8 +157,6 @@ public class PhantomControlCommand implements CommandExecutor {
             }
             targetUuid = offlinePlayer.getUniqueId();
         }
-
-        String mainCommand = configManager.getString("settings.commands.main-command");
 
         switch (adminSubCommand) {
             case "enable":
@@ -172,22 +198,17 @@ public class PhantomControlCommand implements CommandExecutor {
                 }
                 messageUtil.sendMessage(player, statusMsg);
                 break;
-            case "batch":
-                handleBatchCommand(player, args);
-                break;
-            case "server":
-                handleServerCommand(player, args);
-                break;
             default:
-                String invalidMsg = configManager.formatMessage(player, "admin.invalid-subcommand", "%maincommand%", mainCommand);
+                String invalidMsg = configManager.formatMessage(
+                        player, "admin.invalid-subcommand", "%maincommand%", registeredMainCommand);
                 messageUtil.sendMessage(player, invalidMsg);
                 break;
         }
     }
     
     private void showHelp(Player player) {
-        String mainCommand = configManager.getString("settings.commands.main-command");
-        String reloadCommand = configManager.getString("settings.commands.reload-command");
+        String mainCommand = registeredMainCommand;
+        String reloadCommand = registeredReloadCommand;
         
         messageUtil.sendMessage(player,
             configManager.getMessage(player, "help.header") + "\n"
@@ -198,6 +219,7 @@ public class PhantomControlCommand implements CommandExecutor {
             + configManager.formatMessage(player, "help.gui", "%maincommand%", mainCommand) + "\n"
             + configManager.formatMessage(player, "help.admin", "%maincommand%", mainCommand) + "\n"
             + configManager.formatMessage(player, "help.batch", "%maincommand%", mainCommand) + "\n"
+            + configManager.formatMessage(player, "help.server", "%maincommand%", mainCommand) + "\n"
             + configManager.formatMessage(player, "help.help", "%maincommand%", mainCommand) + "\n"
             + configManager.formatMessage(player, "help.reload", "%maincommand%", mainCommand, "%reloadcommand%", reloadCommand)
         );
@@ -205,16 +227,16 @@ public class PhantomControlCommand implements CommandExecutor {
     
     private void handleBatchCommand(Player player, String[] args) {
         if (args.length < 4) {
-            String mainCommand = configManager.getString("settings.commands.main-command");
-            String batchUsage = configManager.formatMessage(player, "admin.batch-usage", "%maincommand%", mainCommand);
+            String batchUsage = configManager.formatMessage(
+                    player, "admin.batch-usage", "%maincommand%", registeredMainCommand);
             messageUtil.sendMessage(player, batchUsage);
             return;
         }
 
         String batchSubCommand = args[2].toLowerCase();
         if (!batchSubCommand.equals("enable") && !batchSubCommand.equals("disable")) {
-            String mainCommand = configManager.getString("settings.commands.main-command");
-            String batchInvalid = configManager.formatMessage(player, "admin.batch-invalid-subcommand", "%maincommand%", mainCommand);
+            String batchInvalid = configManager.formatMessage(
+                    player, "admin.batch-invalid-subcommand", "%maincommand%", registeredMainCommand);
             messageUtil.sendMessage(player, batchInvalid);
             return;
         }
@@ -305,7 +327,7 @@ public class PhantomControlCommand implements CommandExecutor {
         return true;
     }
     
-    private void handleServerCommand(Player player, String[] args) {
+    private void handleServerCommand(Player player) {
         int totalPlayers = org.bukkit.Bukkit.getOnlinePlayers().size();
         int enabledCount = 0;
         int disabledCount = 0;

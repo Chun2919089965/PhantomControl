@@ -28,6 +28,7 @@ public class PhantomControl extends JavaPlugin {
     private MessageUtil messageUtil;
     private PhantomControlAPI api;
     private Object autoSaveTaskId;
+    private int activeAutoSaveInterval = -1;
 
     @Override
     public void onEnable() {
@@ -164,29 +165,53 @@ public class PhantomControl extends JavaPlugin {
         return guiManager;
     }
     
-    public void reloadCommandManager() {
-        this.commandManager = new CommandManager(this, configManager, phantomManager, guiManager, messageUtil);
-    }
+    public ReloadResult reloadAll() {
+        ConfigManager.RuntimeConfigSnapshot previousConfig = configManager.snapshotRuntimeConfig();
+        boolean databaseReloaded;
 
-    public void reloadAll() {
-        cancelAutoSaveTask();
-        configManager.reloadConfig();
-        databaseManager.reloadDatabase();
+        try {
+            configManager.reloadConfig();
+            databaseReloaded = databaseManager.reloadDatabase();
+        } catch (RuntimeException e) {
+            configManager.restoreRuntimeConfig(previousConfig);
+            throw e;
+        }
+
         phantomManager.reloadConfig();
         guiManager.refreshGUIConfig();
-        reloadCommandManager();
-        startAutoSaveTask();
+        refreshAutoSaveTask();
+
+        return new ReloadResult(databaseReloaded,
+                !commandManager.isConfiguredCommandRegistrationCurrent());
     }
 
     private void startAutoSaveTask() {
-        cancelAutoSaveTask();
         int autoSaveInterval = configManager.getInt("database.auto-save-interval");
+        this.autoSaveTaskId = createAutoSaveTask(autoSaveInterval);
+        this.activeAutoSaveInterval = autoSaveInterval;
+    }
 
-        if (autoSaveInterval > 0) {
-            this.autoSaveTaskId = yyz.chl.phantomcontrol.util.SchedulerUtil.runAsyncTimer(() -> {
-                databaseManager.saveAllData();
-            }, autoSaveInterval, autoSaveInterval);
+    private void refreshAutoSaveTask() {
+        int newInterval = configManager.getInt("database.auto-save-interval");
+        if (newInterval == activeAutoSaveInterval) {
+            return;
         }
+
+        Object newTaskId = createAutoSaveTask(newInterval);
+        Object oldTaskId = this.autoSaveTaskId;
+        this.autoSaveTaskId = newTaskId;
+        this.activeAutoSaveInterval = newInterval;
+        if (oldTaskId != null) {
+            yyz.chl.phantomcontrol.util.SchedulerUtil.cancelTask(oldTaskId);
+        }
+    }
+
+    private Object createAutoSaveTask(int interval) {
+        if (interval <= 0) {
+            return null;
+        }
+        return yyz.chl.phantomcontrol.util.SchedulerUtil.runAsyncTimer(
+                databaseManager::saveAllData, interval, interval);
     }
 
     private void cancelAutoSaveTask() {
@@ -194,5 +219,9 @@ public class PhantomControl extends JavaPlugin {
             yyz.chl.phantomcontrol.util.SchedulerUtil.cancelTask(this.autoSaveTaskId);
             this.autoSaveTaskId = null;
         }
+        this.activeAutoSaveInterval = -1;
+    }
+
+    public record ReloadResult(boolean databaseReloaded, boolean commandsRequireRestart) {
     }
 }

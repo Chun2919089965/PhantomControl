@@ -39,6 +39,7 @@ public class DatabaseManager {
     private final ScheduledExecutorService cleanupExecutor;
     private final ExecutorService databaseExecutor;
     private final Object databaseIoLock = new Object();
+    private volatile DatabaseSettings activeDatabaseSettings;
 
     public DatabaseManager(PhantomControl plugin, ConfigManager configManager) {
         this.plugin = plugin;
@@ -53,20 +54,24 @@ public class DatabaseManager {
     }
 
     private void initializeDatabase() {
-        String databaseType = configManager.getDatabaseType();
-
-        switch (databaseType) {
-            case "mysql":
-                this.databaseHandler = new MySQLDatabaseHandler(plugin, configManager);
-                break;
-            case "flatfile":
-            default:
-                this.databaseHandler = new FlatFileDatabaseHandler(plugin);
-                break;
+        DatabaseSettings settings = DatabaseSettings.from(configManager);
+        DatabaseHandler handler = createDatabaseHandler(settings);
+        try {
+            handler.connect();
+            handler.initialize();
+            this.databaseHandler = handler;
+            this.activeDatabaseSettings = settings;
+        } catch (RuntimeException e) {
+            handler.closeConnection();
+            throw e;
         }
+    }
 
-        databaseHandler.connect();
-        databaseHandler.initialize();
+    private DatabaseHandler createDatabaseHandler(DatabaseSettings settings) {
+        if (settings.type().equals("mysql")) {
+            return new MySQLDatabaseHandler(plugin, configManager);
+        }
+        return new FlatFileDatabaseHandler(plugin);
     }
 
     private void startCacheCleanup() {
@@ -90,13 +95,31 @@ public class DatabaseManager {
         }, 1, 1, TimeUnit.HOURS);
     }
 
-    public void reloadDatabase() {
+    public boolean reloadDatabase() {
+        DatabaseSettings requestedSettings = DatabaseSettings.from(configManager);
+        if (requestedSettings.equals(activeDatabaseSettings)) {
+            return false;
+        }
+
         synchronized (databaseIoLock) {
             waitForPendingDatabaseTasksLocked();
             saveAllData();
-            databaseHandler.closeConnection();
-            initializeDatabase();
+
+            DatabaseHandler replacement = createDatabaseHandler(requestedSettings);
+            try {
+                replacement.connect();
+                replacement.initialize();
+            } catch (RuntimeException e) {
+                replacement.closeConnection();
+                throw e;
+            }
+
+            DatabaseHandler previous = databaseHandler;
+            databaseHandler = replacement;
+            activeDatabaseSettings = requestedSettings;
+            previous.closeConnection();
             saveAllData();
+            return true;
         }
     }
 
@@ -164,7 +187,9 @@ public class DatabaseManager {
             playerDataMap.put(entry.getKey(), entry.getValue().value);
         }
 
-        databaseHandler.saveAllData(playerDataMap);
+        synchronized (databaseIoLock) {
+            databaseHandler.saveAllData(playerDataMap);
+        }
     }
 
     /**
@@ -335,6 +360,23 @@ public class DatabaseManager {
             saveAllData();
             shutdownDatabaseExecutorLocked();
             databaseHandler.closeConnection();
+        }
+    }
+
+    private record DatabaseSettings(String type, String address, String database, String username,
+                                    String password, String prefix) {
+        private static DatabaseSettings from(ConfigManager configManager) {
+            String type = configManager.getDatabaseType();
+            if (!type.equals("mysql")) {
+                return new DatabaseSettings(type, null, null, null, null, null);
+            }
+            return new DatabaseSettings(
+                    type,
+                    configManager.getMySQLAddress(),
+                    configManager.getMySQLDatabase(),
+                    configManager.getMySQLUsername(),
+                    configManager.getMySQLPassword(),
+                    configManager.getMySQLPrefix());
         }
     }
 }

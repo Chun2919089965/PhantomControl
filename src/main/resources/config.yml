@@ -1,6 +1,6 @@
 # PhantomControl 配置文件
 # 配置文件版本（请勿手动修改，升级插件时会自动更新）
-config-version: 2
+config-version: 3
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 插件设置
@@ -13,6 +13,7 @@ settings:
 
   # 命令设置
   commands:
+    # 命令名称和别名在服务器重启后生效；其他配置支持热重载
     # 主命令名称
     main-command: "phantomcontrol"
     # 主命令别名

@@ -1,6 +1,6 @@
 # PhantomControl Message Configuration File
 # 配置文件版本（请勿手动修改，升级插件时会自动更新）
-config-version: 2
+config-version: 3
 
 # Main command messages
 command:
@@ -17,6 +17,7 @@ command:
 # Reload command messages
 reload-command:
   success: "&a✅ PhantomControl configuration has been successfully reloaded!"
+  commands-restart-required: "&e⚠ Command names or aliases changed. Other settings are active; command changes require a server restart."
   error: "&c❌ An error occurred while reloading configuration: %error%"
   no-permission: "&cYou do not have permission to use this command!"
 
