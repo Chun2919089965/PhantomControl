@@ -1,6 +1,6 @@
 # PhantomControl 插件文档
 
-![Version](https://img.shields.io/badge/版本-v2.1.0-blue)
+![Version](https://img.shields.io/badge/版本-v2.1.1-blue)
 ![License](https://img.shields.io/badge/开源许可证-AGPL3-green)
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%2B-orange)
 ![Folia](https://img.shields.io/badge/Folia-支持-brightgreen)
@@ -52,7 +52,7 @@ Minecraft 高版本机制中，长时间未睡觉的玩家会被幻翼攻击，�
 
 ### 安装步骤
 
-1. 下载最新版本 `PhantomControl-2.1.0.jar` 插件文件
+1. 下载最新版本 `PhantomControl-2.1.1.jar` 插件文件
 
 2. 将插件放入服务器 `plugins` 文件夹
 
@@ -185,7 +185,7 @@ settings:
 
 ## 💻 开发者 API 文档
 
-v2.1.0 提供公开 API 与自定义事件，通过 Bukkit ServicesManager 注册，支持第三方插件联动，包含**同步查询、异步读写、状态监听、拦截监听**能力。
+v2.1.1 提供公开 API 与自定义事件，通过 Bukkit ServicesManager 注册，支持第三方插件联动，包含**同步查询、异步读写、状态监听、拦截监听**能力。
 
 ### 1. 获取 API 实例
 
@@ -305,7 +305,7 @@ PhantomControl 集成 **bStats 服务器统计**，用于匿名统计插件装�
 
 - **作者**：CHL_chun
 
-- **当前版本**：v2.1.0
+- **当前版本**：v2.1.1
 
 - **开源协议**：[GNU AGPL v3.0](https://github.com/Chun2919089965/PhantomControl/blob/main/LICENSE)
 
